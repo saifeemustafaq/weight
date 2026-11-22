@@ -6,7 +6,7 @@ import { UnitSwitch } from "@/components/unit-switch";
 import { formatDayKey } from "@/lib/dates";
 import { MAX_MEMBERS } from "@/lib/members";
 import type { Board, Member, WeighIn } from "@/lib/types";
-import { formatWeight, parseEntered, rangeMessage, type Unit } from "@/lib/units";
+import { cleanWeightInput, formatWeight, parseEntered, rangeMessage, type Unit } from "@/lib/units";
 import { useUnit } from "@/lib/use-unit";
 
 type SetBoard = Dispatch<SetStateAction<Board | null>>;
@@ -556,7 +556,7 @@ function PersonCard({
                       <input
                         value={value}
                         onChange={(event) => {
-                          setDrafts((current) => ({ ...current, [entry.id]: event.target.value }));
+                          setDrafts((current) => ({ ...current, [entry.id]: cleanWeightInput(event.target.value) }));
                           if (rowError) setRowError(entry.id, "");
                         }}
                         inputMode="decimal"
@@ -628,7 +628,7 @@ function PersonCard({
           <input
             value={addWeight}
             onChange={(event) => {
-              setAddWeight(event.target.value);
+              setAddWeight(cleanWeightInput(event.target.value));
               if (error) setError("");
             }}
             inputMode="decimal"

@@ -11,6 +11,7 @@ import { formatSigned } from "@/lib/format";
 import { DEFAULT_MEMBERS } from "@/lib/members";
 import type { Board, Member, WeighIn } from "@/lib/types";
 import {
+  cleanWeightInput,
   formatWeight,
   fromUnit,
   parseEntered,
@@ -322,7 +323,7 @@ function WeighCard({
         >
           <input
             value={weight}
-            onChange={(event) => onWeight(event.target.value)}
+            onChange={(event) => onWeight(cleanWeightInput(event.target.value))}
             inputMode="decimal"
             autoComplete="off"
             enterKeyHint="done"

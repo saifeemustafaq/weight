@@ -42,7 +42,7 @@ export function parseWeight(value: unknown): number | null {
   if (typeof value === "number") {
     numeric = value;
   } else if (typeof value === "string") {
-    const trimmed = value.trim().replace(",", ".");
+    const trimmed = value.trim().replace(",", ".").replace(/\.$/, "");
     if (!/^\d{2,3}(\.\d{1,2})?$/.test(trimmed)) return null;
     numeric = Number(trimmed);
   } else {

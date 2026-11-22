@@ -23,9 +23,24 @@ export function formatWeight(lb: number, unit: Unit): string {
 
 const NUMBER = /^\d{2,3}(\.\d{1,2})?$/;
 
+/**
+ * Keeps a weight field to something that can become a weight: digits and at
+ * most one point, up to three whole digits and one decimal. Typed or pasted
+ * junk (letters, a second point, a minus sign, a comma) never reaches the box.
+ */
+export function cleanWeightInput(raw: string): string {
+  const text = raw.replace(/,/g, ".").replace(/[^\d.]/g, "");
+  const point = text.indexOf(".");
+  let whole = point === -1 ? text : text.slice(0, point);
+  const decimals = point === -1 ? null : text.slice(point + 1).replace(/\./g, "").slice(0, 1);
+  whole = whole.replace(/^0+(?=\d)/, "").slice(0, 3);
+  if (decimals === null) return whole;
+  return `${whole === "" ? "0" : whole}.${decimals}`;
+}
+
 /** The number typed in a field, in the unit it was typed in. */
 export function parseTyped(value: string): number | null {
-  const trimmed = value.trim().replace(",", ".");
+  const trimmed = value.trim().replace(",", ".").replace(/\.$/, "");
   return NUMBER.test(trimmed) ? Number(trimmed) : null;
 }
 
