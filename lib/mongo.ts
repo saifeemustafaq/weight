@@ -4,12 +4,13 @@ import { RequestError } from "@/lib/errors";
 /**
  * Pool sized for this household, not a generic server.
  *
- * Assumption: Next.js route handlers on a small Atlas cluster, with four
+ * Assumption: Next.js route handlers on a small Atlas cluster, with a handful of
  * people logging once each morning. Peak is a handful of concurrent reads
  * and writes if everyone saves together. The same client is reused across
  * warm serverless invocations and across requests in `next dev`.
  *
- * maxPoolSize 5 — four simultaneous saves plus the board read.
+ * maxPoolSize 5 — a few simultaneous saves plus the board read. Each is a
+ *   single-document write, so any extra saves queue for a moment.
  * minPoolSize 0 — mornings are far apart, so idle sockets are not worth holding
  *   on a small Atlas connection budget.
  * maxIdleTimeMS 20s — release sockets after the page has loaded.

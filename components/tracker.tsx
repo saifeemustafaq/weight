@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { Mornings } from "@/components/mornings";
 import { Trend } from "@/components/trend";
+import { UnitSwitch } from "@/components/unit-switch";
 import { PaceBoard } from "@/components/pace-board";
 import { WeightChart } from "@/components/weight-chart";
 import { formatDayKey, zoneLabel } from "@/lib/dates";
 import { formatSigned } from "@/lib/format";
-import { DEFAULT_MEMBERS, isPlaceholderName } from "@/lib/members";
+import { DEFAULT_MEMBERS } from "@/lib/members";
 import type { Board, Member, WeighIn } from "@/lib/types";
 import {
   formatWeight,
@@ -24,7 +25,6 @@ export function Tracker() {
   const [board, setBoard] = useState<Board | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [names, setNames] = useState<Record<string, string>>({});
   const [weights, setWeights] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [cardError, setCardError] = useState<Record<string, string>>({});
@@ -53,13 +53,6 @@ export function Tracker() {
 
   useEffect(() => {
     if (!board) return;
-    setNames((current) => {
-      const next = { ...current };
-      for (const member of board.members) {
-        if (next[member.id] === undefined) next[member.id] = member.name;
-      }
-      return next;
-    });
     setWeights((current) => {
       const next = { ...current };
       for (const member of board.members) {
@@ -97,45 +90,8 @@ export function Tracker() {
     setUnit(next);
   }
 
-  async function commitName(member: Member, draft = names[member.id] ?? "") {
-    const name = draft.trim().replace(/\s+/g, " ");
-    if (!name || name === member.name) {
-      setNames((current) => ({ ...current, [member.id]: member.name }));
-      return true;
-    }
-    setCardError((current) => ({ ...current, [member.id]: "" }));
-    try {
-      const response = await fetch("/api/members", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: member.id, name }),
-      });
-      const data = (await response.json()) as Member & { error?: string };
-      if (!response.ok) throw new Error(data.error || "The name did not save.");
-      setBoard((current) =>
-        current
-          ? {
-              ...current,
-              members: current.members.map((item) => (item.id === data.id ? data : item)),
-            }
-          : current,
-      );
-      setNames((current) => ({ ...current, [member.id]: data.name }));
-      return true;
-    } catch (error) {
-      setNames((current) => ({ ...current, [member.id]: member.name }));
-      setCardError((current) => ({
-        ...current,
-        [member.id]: error instanceof Error ? error.message : "The name did not save.",
-      }));
-      return false;
-    }
-  }
-
   async function commitWeight(member: Member) {
     if (!board) return;
-    const named = await commitName(member, names[member.id] ?? "");
-    if (!named) return;
     const weight = parseEntered(weights[member.id] ?? "", unit);
     if (weight === null) {
       setCardError((current) => ({
@@ -258,14 +214,9 @@ export function Tracker() {
                   member={member}
                   board={board}
                   unit={unit}
-                  name={names[member.id] ?? member.name}
                   weight={weights[member.id] ?? ""}
                   saving={Boolean(saving[member.id])}
                   error={cardError[member.id] ?? ""}
-                  onName={(value) =>
-                    setNames((current) => ({ ...current, [member.id]: value }))
-                  }
-                  onNameCommit={(draft) => void commitName(member, draft)}
                   onWeight={(value) => {
                     setWeights((current) => ({ ...current, [member.id]: value }));
                     setCardError((current) =>
@@ -292,40 +243,13 @@ export function Tracker() {
   );
 }
 
-function UnitSwitch({ unit, onChange }: { unit: Unit; onChange: (unit: Unit) => void }) {
-  return (
-    <div
-      role="group"
-      aria-label="Weight unit"
-      className="flex shrink-0 rounded-full border border-line bg-card p-1 text-sm font-medium"
-    >
-      {(["lb", "kg"] as const).map((option) => (
-        <button
-          key={option}
-          type="button"
-          aria-pressed={unit === option}
-          onClick={() => onChange(option)}
-          className={`h-9 min-w-12 rounded-full px-3 touch-manipulation ${
-            unit === option ? "bg-ink text-paper" : "text-muted"
-          }`}
-        >
-          {option}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function WeighCard({
   member,
   board,
   unit,
-  name,
   weight,
   saving,
   error,
-  onName,
-  onNameCommit,
   onWeight,
   onSubmit,
   onClear,
@@ -333,17 +257,13 @@ function WeighCard({
   member: Member;
   board: Board;
   unit: Unit;
-  name: string;
   weight: string;
   saving: boolean;
   error: string;
-  onName: (value: string) => void;
-  onNameCommit: (draft: string) => void;
   onWeight: (value: string) => void;
   onSubmit: () => void;
   onClear: () => void;
 }) {
-  const [editingName, setEditingName] = useState(isPlaceholderName(member.name));
   const mine = board.entries
     .filter((entry) => entry.personId === member.id)
     .sort((a, b) => a.dayKey.localeCompare(b.dayKey));
@@ -378,36 +298,7 @@ function WeighCard({
             style={{ background: member.color }}
             aria-hidden
           />
-          {editingName ? (
-            <input
-              value={name}
-              maxLength={20}
-          aria-label={`${member.name} name`}
-              onChange={(event) => onName(event.target.value)}
-              onBlur={(event) => {
-                onNameCommit(event.currentTarget.value);
-                if (!isPlaceholderName(event.currentTarget.value.trim())) setEditingName(false);
-              }}
-              onFocus={(event) => {
-                if (isPlaceholderName(event.currentTarget.value)) event.currentTarget.select();
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  event.currentTarget.blur();
-                }
-              }}
-              className="w-full min-w-0 bg-transparent font-serif text-2xl tracking-tight outline-none"
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditingName(true)}
-              className="truncate text-left font-serif text-2xl tracking-tight"
-            >
-              {member.name}
-            </button>
-          )}
+          <h2 className="truncate font-serif text-2xl tracking-tight">{member.name}</h2>
         </div>
         <Trend
           personId={member.id}
@@ -435,7 +326,7 @@ function WeighCard({
             inputMode="decimal"
             autoComplete="off"
             enterKeyHint="done"
-            aria-label={`${name} weight in ${unit === "kg" ? "kilograms" : "pounds"}`}
+            aria-label={`${member.name} weight in ${unit === "kg" ? "kilograms" : "pounds"}`}
             placeholder=""
             className="min-w-0 flex-1 bg-transparent font-serif text-[2rem] leading-none tabular-nums tracking-tight text-ink outline-none placeholder:text-line"
           />

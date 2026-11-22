@@ -11,6 +11,25 @@ export type SeedMember = {
   order: number;
 };
 
+/** Most people the board holds. Enough for a family or a small house, few enough to keep the page short. */
+export const MAX_MEMBERS = 12;
+
+/**
+ * Colours handed to people in order. The first four are the original household;
+ * every colour stays dark enough for white text on a solid Log button. Past the
+ * last one the list starts over.
+ */
+export const PALETTE = [
+  "#c4552a",
+  "#2c6e5a",
+  "#24598a",
+  "#8d5a12",
+  "#7b4f9d",
+  "#b8456b",
+  "#5a6672",
+  "#6b7a2a",
+];
+
 export const DEFAULT_MEMBERS: SeedMember[] = [
   { id: "p1", name: "Person 1", color: "#c4552a", order: 0 },
   { id: "p2", name: "Person 2", color: "#2c6e5a", order: 1 },
@@ -45,5 +64,5 @@ export function parseName(value: unknown): string | null {
 }
 
 export function isPlaceholderName(name: string): boolean {
-  return /^Person [1-4]$/.test(name);
+  return /^Person \d+$/.test(name);
 }
