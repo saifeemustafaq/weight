@@ -23,4 +23,6 @@ npm run dev
 
 Open http://localhost:3000. Replace the four placeholder names on the cards. The names save to Atlas when you leave the field.
 
+Weights show in kg until someone taps lb. The switch at the top changes how weights are shown and typed. Everything is stored in pounds, so switching never changes saved data. Each phone remembers its own choice.
+
 Logging again on the same morning updates that entry. Clear removes today only.

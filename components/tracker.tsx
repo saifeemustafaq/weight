@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Mornings } from "@/components/mornings";
+import { Trend } from "@/components/trend";
 import { PaceBoard } from "@/components/pace-board";
 import { WeightChart } from "@/components/weight-chart";
 import { formatDayKey, zoneLabel } from "@/lib/dates";
@@ -408,19 +409,13 @@ function WeighCard({
             </button>
           )}
         </div>
-        <div className="max-w-36 shrink-0 text-right">
-          <p className="text-xs leading-tight text-muted">{status}</p>
-          {todayEntry && (
-            <button
-              type="button"
-              onClick={onClear}
-              disabled={saving}
-              className="mt-1 text-xs text-muted underline decoration-line underline-offset-2 touch-manipulation"
-            >
-              Undo
-            </button>
-          )}
-        </div>
+        <Trend
+          personId={member.id}
+          entries={board.entries}
+          today={board.today}
+          unit={unit}
+          color={member.color}
+        />
       </div>
 
       <form
@@ -461,6 +456,21 @@ function WeighCard({
           {saving ? "Saving" : unchanged ? "Logged" : todayEntry ? "Update" : "Log"}
         </button>
       </form>
+      {(status || todayEntry) && (
+        <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted">
+          <p>{status}</p>
+          {todayEntry && (
+            <button
+              type="button"
+              onClick={onClear}
+              disabled={saving}
+              className="-my-2 -mr-2 px-2 py-2 underline decoration-line underline-offset-2 touch-manipulation"
+            >
+              Undo
+            </button>
+          )}
+        </div>
+      )}
       {error && <p className="mt-2 text-sm text-stamp">{error}</p>}
     </article>
   );

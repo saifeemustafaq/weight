@@ -2,9 +2,10 @@ import { useCallback, useSyncExternalStore } from "react";
 import type { Unit } from "@/lib/units";
 
 const KEY = "weight-unit";
+const DEFAULT_UNIT: Unit = "kg";
 const listeners = new Set<() => void>();
 // Private browsing can refuse storage. The choice then lasts until reload.
-let remembered: Unit = "lb";
+let remembered: Unit = DEFAULT_UNIT;
 
 function read(): Unit {
   try {
@@ -27,7 +28,7 @@ function subscribe(listener: () => void): () => void {
 
 /** The unit this phone reads in. It is a display choice, so it lives in the browser. */
 export function useUnit(): [Unit, (unit: Unit) => void] {
-  const unit = useSyncExternalStore(subscribe, read, () => "lb" as Unit);
+  const unit = useSyncExternalStore(subscribe, read, () => DEFAULT_UNIT);
   const setUnit = useCallback((next: Unit) => {
     remembered = next;
     try {
