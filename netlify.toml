@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+
+[build.environment]
+  # Both values are ordinary words that the code itself contains: "weight" is the
+  # project name and the default database name, and America/Los_Angeles is the
+  # default household timezone. Neither is a secret. MONGODB_URI stays scanned.
+  SECRETS_SCAN_OMIT_KEYS = "MONGODB_DB,FAMILY_TIMEZONE"
